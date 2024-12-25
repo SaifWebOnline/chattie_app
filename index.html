@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👋 Chattie App | MD Saif Prog Dev.</title>
+    <style>
+        /* Reset some styles */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Main container */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+            height: 600px;
+            margin: 50px auto;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: white;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* Chat messages box */
+        .chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #e9ecef;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Chat messages */
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        .message.other-user {
+            background-color: #f1f1f1;
+            color: black;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+
+        /* Input area */
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            background-color: white;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #0056b3;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #f0f2f5;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">😎 | Let's Chat with Chattie</div>
+        <div id="chatbox" class="chat-box"></div>
+        <div class="chat-input" id="input-area">
+            <input id="message" placeholder="Type your message here..." />
+            <button id="send"> Send »</button>
+        </div>
+    </div>
+    <footer>
+        <p>Made with ❤️ by <a href="https://mdsaifprog2.netlify.app">MD Saif Prog Dev.</a></p>
+    </footer>
+    <script>
+const ws = new WebSocket(`wss://${window.location.host}`);
+        const chatbox = document.getElementById('chatbox');
+        const messageInput = document.getElementById('message');
+        const sendButton = document.getElementById('send');
+
+        let username = prompt('Enter your username:');
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ type: 'join', username }));
+        };
+
+        ws.onmessage = event => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'system' || data.type === 'notification') {
+                chatbox.innerHTML += `<div class="message other-user"><em>${data.text}</em></div>`;
+            } else if (data.type === 'message') {
+                const sender = data.username === username ? 'YOU' : data.username;
+                const messageClass = data.username === username ? 'user' : 'other-user';
+                chatbox.innerHTML += `<div class="message ${messageClass}"><strong>${sender}:</strong> ${data.text}</div>`;
+            }
+            chatbox.scrollTop = chatbox.scrollHeight;
+        };
+
+        sendButton.addEventListener('click', () => {
+            const text = messageInput.value;
+            if (text) {
+                ws.send(JSON.stringify({ type: 'message', text }));
+                messageInput.value = '';
+            }
+        });
+
+        messageInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+    </script>
+</body>
+
+</html>
